@@ -30,7 +30,7 @@
 		<div>
 			<label></label>
 			<input type="submit" name="s" value="Submit"/>
-			<input type="reset" name="c" value="Clear"/>
+			<input id=""type="reset" name="c" value="Clear"/>
 		</div>
 
 	</form>
@@ -66,6 +66,11 @@
 				};
 				return result;
 			};
+
+			$('input[type=reset]').click(function()
+			{
+				$('#output').val('').hide();
+			});
 
 			var from = urlParams.oh;
 
