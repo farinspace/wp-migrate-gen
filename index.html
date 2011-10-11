@@ -57,30 +57,52 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
-
-body {
-	margin-top:20px;
-}
-
 #ui {
 	width:700px;
-	margin:0 auto;
+	margin:20px auto;
 	border:1px solid #ccc;
-
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 }
-
 #ui .content {
 	padding:20px;
 }
-
 #output {
 	display:none; 
-	width:100%; 
-	height:300px; 
+	width:100%;
 	font-size:11px; 
 	outline:none;
+	border:0;
+	font-family:arial;
+	line-height:15px;
+	margin-top:20px;
+	padding-top:20px;
+	border-top:1px dotted #ccc;
+}
+#output div {
+	padding:3px 0;
+}
+label {
+	display:block;
+	font-size:11px;
+	font-family:arial;
+	color:#999;
+	line-height:15px;
+}
+div.cb label {
+	display:inline;
+}
+form div {
+	margin-bottom:10px;
+}
+form input[type=text] {
+	width:350px;
+	padding:5px;
+}
+span.count {
+	font-size:11px;
+	font-family:arial;
+	color:#999;
 }
 	</style>
 
@@ -93,24 +115,30 @@ body {
 		<form method="get">
 			
 			<div>
-				<label>Old Hostname:</label>
 				<input type="text" name="oh" value=""/>
+				<span class="count">0</span>
+				<label>Old Hostname</label>
 			</div>
 
 			<div>
-				<label>New Hostname:</label>
 				<input type="text" name="nh" value=""/>
+				<span class="count">0</span>
+				<label>New Hostname</label>
 			</div>
 
-			<div>
-				<label>Disable Plugins?</label>
+			<div class="cb">
+				<input type="checkbox" name="ss" value="1" checked="checked" />
+				<label>Skip serialized data?</label>
+			</div>
+
+			<div class="cb">
 				<input type="checkbox" name="dp" value="1"/>
+				<label>Disable plugins?</label>
 			</div>
 
 			<div>
-				<label>Specific Plugins (comma seperated list):</label>
 				<input type="text" name="sp" value=""/>
-				<p><a href="http://plugins.svn.wordpress.org/" target="_blank">List of plugin names</a></p>
+				<label>Disable specific plugins (comma seperated list, <a href="http://plugins.svn.wordpress.org/" target="_blank">list of plugin names</a>)</label>
 			</div>
 
 			<div>
@@ -121,7 +149,7 @@ body {
 
 		</form>
 
-		<textarea id="output"></textarea>
+		<div id="output"></div>
 
 	</div>
 	</div>
@@ -171,6 +199,11 @@ body {
 
 			if (to) $('input[name=nh]').val(to);
 
+			$('input[name=oh], input[name=nh]').keyup(function(e)
+			{
+				$(this).next().empty().append($(this).val().length);
+			}).trigger('keyup');
+
 			var disablePlugins = urlParams.dp;
 
 			if (1 == disablePlugins) $('input[name=dp]').attr('checked','checked');
@@ -181,21 +214,36 @@ body {
 
 			if (from && to)
 			{
+				var skipSerialized = urlParams.ss;
+
+				if (1 == skipSerialized) $('input[name=ss]').attr('checked','checked');
+				else $('input[name=ss]').removeAttr('checked');
+
 				$('#output').show();
 
-				var content = "UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_posts` SET `guid` = REPLACE(`guid`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_posts` SET `post_content` = REPLACE(`post_content`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_comments` SET `comment_author_url` = REPLACE(`comment_author_url`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_comments` SET `comment_content` = REPLACE(`comment_content`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_links` SET `link_url` = REPLACE(`link_url`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_postmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_usermeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "');\n"
-							+ "UPDATE `wp_commentmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "');\n";
+				var content = [];
+
+				content.push("UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `option_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+
+				content.push("UPDATE `wp_posts` SET `guid` = REPLACE(`guid`, '" + from + "', '" + to + "');");
+
+				content.push("UPDATE `wp_posts` SET `post_content` = REPLACE(`post_content`, '" + from + "', '" + to + "');");
+
+				content.push("UPDATE `wp_comments` SET `comment_author_url` = REPLACE(`comment_author_url`, '" + from + "', '" + to + "');");
+
+				content.push("UPDATE `wp_comments` SET `comment_content` = REPLACE(`comment_content`, '" + from + "', '" + to + "');");
+
+				content.push("UPDATE `wp_links` SET `link_url` = REPLACE(`link_url`, '" + from + "', '" + to + "');");
+
+				content.push("UPDATE `wp_postmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+
+				content.push("UPDATE `wp_usermeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+
+				content.push("UPDATE `wp_commentmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";\n");
 
 				if (1 == disablePlugins)
 				{
-					content = content + "DELETE FROM `wp_options` WHERE `option_name` = 'active_plugins';\n";
+					content.push("DELETE FROM `wp_options` WHERE `option_name` = 'active_plugins';");
 				}
 				else if (specificPlugins)
 				{
@@ -207,16 +255,13 @@ body {
 					{
 						v = $.trim(v);
 
-						content = content + "UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + v + "', '" + repeat('*', v.length) + "') WHERE `option_name` = 'active_plugins';\n";
-					});
-
-					$.map(specificPlugins, function (n)
-					{
-						return $.trim(n);
+						content.push("UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + v + "', '" + repeat('*', v.length) + "') WHERE `option_name` = 'active_plugins';");
 					});
 				}
 
-				$('#output').val(content);
+				content = '<div>' + content.join('</div><div>') + '</div>';
+
+				$('#output').append(content);
 			}
 		});
 
