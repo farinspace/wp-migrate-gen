@@ -225,8 +225,6 @@ span.count {
 
 				content.push("UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `option_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
 
-				content.push("UPDATE `wp_posts` SET `guid` = REPLACE(`guid`, '" + from + "', '" + to + "');");
-
 				content.push("UPDATE `wp_posts` SET `post_content` = REPLACE(`post_content`, '" + from + "', '" + to + "');");
 
 				content.push("UPDATE `wp_comments` SET `comment_author_url` = REPLACE(`comment_author_url`, '" + from + "', '" + to + "');");
