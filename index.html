@@ -75,6 +75,11 @@ table {
 	padding-top:20px;
 	border-top:1px dotted #ccc;
 }
+hr {
+	border:0;
+	border-top:1px dotted #ccc;
+	margin:20px 0;
+}
 #output div {
 	padding:3px 0;
 }
@@ -96,10 +101,19 @@ div.cb label {
 form div {
 	margin-bottom:15px;
 }
-form input[type=text] {
+input[type=text] {
 	width:320px;
 	margin-bottom:5px;
 	padding:5px;
+}
+input[type=submit],
+input[type=reset] {
+	background-color: #eee;
+	border: 0;
+	padding: 10px 15px;
+}
+input[type=submit]:hover {
+	background-color: #ddd;
 }
 span.count {
 	font-size:11px;
@@ -156,7 +170,7 @@ span.count {
 
 			<div>
 				<label></label>
-				<input type="submit" name="s" value="Submit"/>
+				<input type="submit" name="s" value="Generate"/>
 				<input id=""type="reset" name="c" value="Clear"/>
 			</div>
 
