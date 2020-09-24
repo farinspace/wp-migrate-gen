@@ -128,10 +128,20 @@ span.count {
 				<label>New content</label>
 			</div>
 
+			<div>
+				<input type="text" name="tp" value="wp_"/>
+				<label>Table prefix</label>
+			</div>
+
 			<div class="cb">
 				<input type="checkbox" name="ss" value="1" checked="checked" />
 				<label>Skip serialized data?</label>
 				<p class="description">Avoids replacing content when a field is PHP serialized data.</p>
+			</div>
+
+			<div class="cb">
+				<input type="checkbox" name="rg" value="1" />
+				<label>Replace guid?</label>
 			</div>
 
 			<div class="cb">
@@ -192,6 +202,10 @@ span.count {
 				location.href = location.pathname;
 			});
 
+			var prefix = urlParams.tp;
+
+			if (prefix) $('input[name=tp]').val(prefix);
+
 			var from = urlParams.oh;
 
 			if (from) $('input[name=oh]').val(from);
@@ -213,6 +227,10 @@ span.count {
 
 			if (specificPlugins) $('input[name=sp]').val(specificPlugins);
 
+			var replaceGuid = urlParams.rg;
+
+			if (1 == replaceGuid) $('input[name=rg]').attr('checked','checked');
+
 			if (from && to)
 			{
 				var skipSerialized = urlParams.ss;
@@ -224,27 +242,34 @@ span.count {
 
 				var content = [];
 
-				content.push("UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `option_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+				content.push("UPDATE `" + prefix + "options` SET `option_value` = REPLACE(`option_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `option_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
 
-				content.push("UPDATE `wp_posts` SET `post_content` = REPLACE(`post_content`, '" + from + "', '" + to + "');");
+				content.push("UPDATE `" + prefix + "posts` SET `post_content` = REPLACE(`post_content`, '" + from + "', '" + to + "');");
 
-				content.push("UPDATE `wp_comments` SET `comment_author_url` = REPLACE(`comment_author_url`, '" + from + "', '" + to + "');");
+				content.push("UPDATE `" + prefix + "posts` SET `post_excerpt` = REPLACE(`post_excerpt`, '" + from + "', '" + to + "');");
 
-				content.push("UPDATE `wp_comments` SET `comment_content` = REPLACE(`comment_content`, '" + from + "', '" + to + "');");
+				if (1 == replaceGuid)
+				{
+					content.push("UPDATE `" + prefix + "posts` SET `guid` = REPLACE(`guid`, '" + from + "', '" + to + "');");
+				}
 
-				content.push("UPDATE `wp_links` SET `link_url` = REPLACE(`link_url`, '" + from + "', '" + to + "');");
+				content.push("UPDATE `" + prefix + "comments` SET `comment_author_url` = REPLACE(`comment_author_url`, '" + from + "', '" + to + "');");
 
-				content.push("UPDATE `wp_postmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+				content.push("UPDATE `" + prefix + "comments` SET `comment_content` = REPLACE(`comment_content`, '" + from + "', '" + to + "');");
 
-				content.push("UPDATE `wp_usermeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+				content.push("UPDATE `" + prefix + "links` SET `link_url` = REPLACE(`link_url`, '" + from + "', '" + to + "');");
 
-				content.push("UPDATE `wp_termmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+				content.push("UPDATE `" + prefix + "postmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
 
-				content.push("UPDATE `wp_commentmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";\n");
+				content.push("UPDATE `" + prefix + "usermeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+
+				content.push("UPDATE `" + prefix + "termmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+
+				content.push("UPDATE `" + prefix + "commentmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";\n");
 
 				if (1 == disablePlugins)
 				{
-					content.push("DELETE FROM `wp_options` WHERE `option_name` = 'active_plugins';");
+					content.push("DELETE FROM `" + prefix + "options` WHERE `option_name` = 'active_plugins';");
 				}
 				else if (specificPlugins)
 				{
@@ -256,7 +281,7 @@ span.count {
 					{
 						v = $.trim(v);
 
-						content.push("UPDATE `wp_options` SET `option_value` = REPLACE(`option_value`, '" + v + "', '" + repeat('*', v.length) + "') WHERE `option_name` = 'active_plugins';");
+						content.push("UPDATE `" + prefix + "options` SET `option_value` = REPLACE(`option_value`, '" + v + "', '" + repeat('*', v.length) + "') WHERE `option_name` = 'active_plugins';");
 					});
 				}
 
