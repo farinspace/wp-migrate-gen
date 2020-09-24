@@ -1,6 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<!DOCTYPE html>
+<html>
 <head>
 
 	<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -9,11 +8,7 @@
 	<title>WP Migrate Gen</title>
 
 	<style type="text/css">
-/* http://meyerweb.com/eric/tools/css/reset/ 
-   v2.0 | 20110126
-   License: none (public domain)
-*/
-
+/* http://meyerweb.com/eric/tools/css/reset/ */
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -23,8 +18,8 @@ b, u, i, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
 	margin: 0;
@@ -35,12 +30,13 @@ time, mark, audio, video {
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, 
+article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
-body {
-	line-height: 1;
+html, body {
+	font-size: 10px;
+	line-height: 1.2;
 }
 ol, ul {
 	list-style: none;
@@ -58,7 +54,7 @@ table {
 	border-spacing: 0;
 }
 #ui {
-	width:700px;
+	width:80%;
 	margin:20px auto;
 	border:1px solid #ccc;
 	-moz-border-radius: 5px;
@@ -68,9 +64,9 @@ table {
 	padding:20px;
 }
 #output {
-	display:none; 
+	display:none;
 	width:100%;
-	font-size:11px; 
+	font-size:1.4rem;
 	outline:none;
 	border:0;
 	font-family:arial;
@@ -82,21 +78,27 @@ table {
 #output div {
 	padding:3px 0;
 }
-label {
+label,
+.description {
 	display:block;
-	font-size:11px;
+	font-size:1.4rem;
 	font-family:arial;
-	color:#999;
+	color:#333;
 	line-height:15px;
+}
+.description {
+	color:#999;
+	margin-top:5px;
 }
 div.cb label {
 	display:inline;
 }
 form div {
-	margin-bottom:10px;
+	margin-bottom:15px;
 }
 form input[type=text] {
-	width:350px;
+	width:320px;
+	margin-bottom:5px;
 	padding:5px;
 }
 span.count {
@@ -108,37 +110,38 @@ span.count {
 
 </head>
 <body>
-	
+
 	<div id="ui">
 	<div class="content">
 
 		<form method="get">
-			
+
 			<div>
 				<input type="text" name="oh" value=""/>
 				<span class="count">0</span>
-				<label>Old Hostname</label>
+				<label>Old content</label>
 			</div>
 
 			<div>
 				<input type="text" name="nh" value=""/>
 				<span class="count">0</span>
-				<label>New Hostname</label>
+				<label>New content</label>
 			</div>
 
 			<div class="cb">
 				<input type="checkbox" name="ss" value="1" checked="checked" />
 				<label>Skip serialized data?</label>
+				<p class="description">Avoids replacing content when a field is PHP serialized data.</p>
 			</div>
 
 			<div class="cb">
 				<input type="checkbox" name="dp" value="1"/>
-				<label>Disable plugins?</label>
+				<label>Disable all plugins?</label>
 			</div>
 
 			<div>
 				<input type="text" name="sp" value=""/>
-				<label>Disable specific plugins (comma seperated list, <a href="http://plugins.svn.wordpress.org/" target="_blank">list of plugin names</a>)</label>
+				<label>Disable specific plugins by name (comma seperated list, <a href="http://plugins.svn.wordpress.org/" target="_blank">list of plugin names</a>)</label>
 			</div>
 
 			<div>
@@ -186,8 +189,6 @@ span.count {
 
 			$('input[type=reset]').click(function()
 			{
-				//$('#output').val('').hide();
-
 				location.href = location.pathname;
 			});
 
@@ -236,6 +237,8 @@ span.count {
 				content.push("UPDATE `wp_postmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
 
 				content.push("UPDATE `wp_usermeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
+
+				content.push("UPDATE `wp_termmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";");
 
 				content.push("UPDATE `wp_commentmeta` SET `meta_value` = REPLACE(`meta_value`, '" + from + "', '" + to + "')" + (skipSerialized?" WHERE `meta_value` NOT REGEXP '^([adObis]:|N;)'":"") + ";\n");
 
